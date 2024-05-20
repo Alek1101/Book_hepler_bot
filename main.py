@@ -5,13 +5,13 @@ import os
 from dotenv import load_dotenv
 import logging
 
-from config import NAME_FILE_LOGS
+from config import *
 from info import GREETING, TEXT_HELP
-from database import create_db, create_table, add_new_user, is_user_in_db
+from database import *
 
 
 logging.basicConfig(
-    filename=NAME_FILE_LOGS,
+    filename=LOGS,
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     filemode="w",
@@ -23,14 +23,12 @@ bot = telebot.TeleBot(os.getenv('TOKEN'))
 # create_db() пока просто столбцы точно не знаем лучше не создавать загляни еще в database
 # create_table()
 
-# TODO: ура комит
-
 
 @bot.message_handler(commands=['start'])
 def say_start(message: Message):
     # здесь короче тоже надо будет сначала со столбцами разобраться, а потом думать, но пока так
-    user_id = message.from_user.id
-    bot.send_message(user_id, GREETING)
+    # Не, давай его добавим в бд, когда непосредственно обратится к gpt
+    bot.send_message(message.from_user.id, GREETING)
 
 
 @bot.message_handler(commands=['help'])
@@ -39,9 +37,9 @@ def say_help(message: Message):
 
 
 @bot.message_handler(commands=['debug'])
-def send_logs(message: Message):
+def logs(message: Message):
     try:
-        with open(NAME_FILE_LOGS, "rb") as f:
+        with open(LOGS, "rb") as f:
             bot.send_document(message.chat.id, f)
 
     except Exception as e:
