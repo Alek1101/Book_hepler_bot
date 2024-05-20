@@ -102,3 +102,10 @@ def get_user_data(user_id: int, table_name: str = TABLE_NAME) -> dict:
               'genre': row[4],
               'tokens': row[5]}
     return result
+
+
+# функция, которая нужна если захотим утановить лимит пользователей
+def get_all_from_table() -> list:
+    sql_query = f'SELECT * FROM {TABLE_NAME};'
+    res = execute_selection_query(sql_query)
+    return res
