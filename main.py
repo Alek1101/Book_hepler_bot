@@ -23,8 +23,6 @@ bot = telebot.TeleBot(os.getenv('TOKEN'))
 # create_db() пока просто столбцы точно не знаем лучше не создавать загляни еще в database
 # create_table()
 
-# TODO: ура комит
-
 
 @bot.message_handler(commands=['start'])
 def say_start(message: Message):
