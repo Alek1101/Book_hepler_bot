@@ -4,4 +4,4 @@ DATABASE_NAME = 'book_bot_helper.db'
 
 TABLE_NAME = 'users'
 
-'hello'
+
