@@ -1,5 +1,7 @@
-NAME_FILE_LOGS = 'logs.txt'
+LOGS = f'logs.txt'
 
-DATABASE_NAME = 'book_bot_helper.db'
+IAM_TOKEN_PATH = f'iam_token.txt'
+FOLDER_ID_PATH = f'folder_id.txt'
+BOT_TOKEN_PATH = f'bot_token.txt'
 
-TABLE_NAME = 'users'
+MAX_GPT_TOKENS = 120
