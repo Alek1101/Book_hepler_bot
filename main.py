@@ -1,13 +1,11 @@
 import telebot
-from telebot.types import Message
-
 import os
+from telebot.types import Message, ReplyKeyboardMarkup
 from dotenv import load_dotenv
-import logging
-
 from config import *
 from info import GREETING, TEXT_HELP
 from database import *
+from yandex_gpt import *
 
 
 logging.basicConfig(
@@ -24,6 +22,13 @@ bot = telebot.TeleBot(os.getenv('TOKEN'))
 # create_table()
 
 
+def create_keyboard(data: list):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    for i in data:
+        markup.add(i)
+    return markup
+
+
 @bot.message_handler(commands=['start'])
 def say_start(message: Message):
     # здесь короче тоже надо будет сначала со столбцами разобраться, а потом думать, но пока так
@@ -33,7 +38,7 @@ def say_start(message: Message):
 
 @bot.message_handler(commands=['help'])
 def say_help(message: Message):
-    bot.send_message(message.from_user.id, TEXT_HELP)
+    bot.send_message(message.from_user.id, TEXT_HELP, reply_markup=create_keyboard(['/ask']))
 
 
 @bot.message_handler(commands=['debug'])
@@ -44,3 +49,33 @@ def logs(message: Message):
 
     except Exception as e:
         bot.send_message(message.chat.id, f'Не удалось отправить файл {e}')
+
+
+@bot.message_handler(commands=['ask'])
+def ask(m):
+    # TODO: здесь надо добавить функцию count_tokens и привязать её к значению токена пользователя в базе данных
+    bot.send_message(m.chat.id, 'Хотите ли вы узнать о какой-то конкретной книге?\n '
+                                'Или, может быть, вам хочется найти книги, соответствующие определённым'
+                                ' критериям?')
+    bot.send_message(m.chat.id, 'Вы наверняка общаетесь со мной первый раз. Поделюсь лайфхаком:'
+                                '\n-чтобы узнать краткое содержание определённой книги, нажмите /book\n'
+                                '-чтобы подобрать книги по фильтру, нажмите /look_for',
+                     reply_markup=create_keyboard(['/book', '/look_for']))
+
+
+@bot.message_handler(commands=['book'])
+def book(m):
+    if m.text == '/book':
+        bot.send_message(m.chat.id, 'Введите название книги и имя автора')
+        bot.register_next_step_handler(m, book)
+    messages = [{'role': 'system', 'text': SYSTEM_PROMPT}, {'role': 'user', 'text': m.text}]
+    bot.send_message(m.chat.id, ask_ya_gpt(messages))
+
+
+# TODO: сделать самое сложное - написать функцию /look_for и наконец, чёрт возьми, протестировать бота!
+# P.S. Я просто ещё не тестил, буду благодарен, если ты опробуешь
+# P.P.S. Я сегодня до четырёх-пяти буду не в свободном доступе, свяжемся около шести
+
+
+
+
