@@ -1,7 +1,7 @@
 import requests
 
 from config import *
-from info import SYSTEM_PROMPT, GOOD_STATUS_KOD
+from info import SYSTEM_PROMPT, GOOD_STATUS_CODE
 import logging
 from creds import get_creds
 
@@ -46,7 +46,7 @@ def ask_ya_gpt(user_collection: list) -> str:
                                  headers=headers,
                                  json=data)
 
-        if response.status_code != GOOD_STATUS_KOD:
+        if response.status_code != GOOD_STATUS_CODE:
             result = f'Ошибка при получении ответа от нейросети! Статус кода: {response.status_code}'
             logging.debug(f'Ошибка при получении ответа от GPT {response.status_code}')
             return result
@@ -54,5 +54,5 @@ def ask_ya_gpt(user_collection: list) -> str:
 
     except Exception as e:
         result = f'Произошла ошибка: {e}'
-        logging.debug(f'Ошибка при получении ответа от GPT {e}')
+        logging.error(f'Ошибка при получении ответа от GPT {e}')
     return result
