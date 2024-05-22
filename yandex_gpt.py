@@ -1,11 +1,11 @@
 import requests
 
 from config import *
-from info import SYSTEM_PROMPT, GOOD_STATUS_CODE
+from info import *
 import logging
-from creds import get_creds
+# from creds import get_creds
 
-IAM_TOKEN, FOLDER_ID = get_creds()
+# IAM_TOKEN, FOLDER_ID = get_creds()
 
 
 def make_system_prompt(user_data: dict) -> list:

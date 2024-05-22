@@ -2,7 +2,7 @@ import sqlite3
 import logging
 import json
 
-from info import SYSTEM_PROMPT, DATABASE_NAME, TABLE_NAME, NAME_FILE_LOGS
+from info import *
 
 
 logging.basicConfig(
@@ -79,7 +79,7 @@ def add_new_user(user_id: int, table_name: str = TABLE_NAME):
             f'INSERT INTO {table_name} (user_id, messages, author, genre, tokens) '
             f'VALUES (?, 0, 0, 0, ?);'
         )
-        json_values = json.dumps([{'role': 'system', 'text': SYSTEM_PROMPT}])
+        json_values = json.dumps([{'role': 'system', 'text': SYSTEM_PROMPT_1}])
         execute_query(sql_query, (user_id, json_values))
         logging.info(f'Юзер {user_id} добавлен в таблицу')
     else:

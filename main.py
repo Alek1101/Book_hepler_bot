@@ -3,10 +3,9 @@ import os
 from telebot.types import Message, ReplyKeyboardMarkup
 from dotenv import load_dotenv
 from config import *
-from info import GREETING, TEXT_HELP
+from info import *
 from database import *
 from yandex_gpt import *
-
 
 logging.basicConfig(
     filename=LOGS,
@@ -15,8 +14,9 @@ logging.basicConfig(
     filemode="w",
 )
 
-load_dotenv()
-bot = telebot.TeleBot(os.getenv('TOKEN'))
+# load_dotenv()
+bot = telebot.TeleBot(TOKEN)
+
 
 # create_db() пока просто столбцы точно не знаем лучше не создавать загляни еще в database
 # create_table()
@@ -51,6 +51,14 @@ def logs(message: Message):
         bot.send_message(message.chat.id, f'Не удалось отправить файл {e}')
 
 
+@bot.message_handler(commands=['menu'])
+def menu(m):
+    bot.send_message(m.chat.id, 'Выберите одну из команд:\n'
+                                '/book - узнать информацию о конкретной книге\n'
+                                '/look_for - найти похожие книги',
+                     reply_markup=create_keyboard(['/book', '/look_for']))
+
+
 @bot.message_handler(commands=['ask'])
 def ask(m):
     # TODO: здесь надо добавить функцию count_tokens и привязать её к значению токена пользователя в базе данных
@@ -63,17 +71,18 @@ def ask(m):
                      reply_markup=create_keyboard(['/book', '/look_for']))
 
 
-@bot.message_handler(commands=['book'])
+@bot.message_handler(commands=['book', 'continue'])
 def book(m):
-    if m.text == '/book':
-        bot.send_message(m.chat.id, 'Введите название книги и имя автора')
-        bot.register_next_step_handler(m, book)
-    messages = [{'role': 'system', 'text': SYSTEM_PROMPT}, {'role': 'user', 'text': m.text}]
+    text = m.text
+    bot.send_message(m.chat.id, 'Введите название книги и имя автора')
+    bot.register_next_step_handler(m, book_circle)
+
+
+def book_circle(m):
+    text = m.text
+    messages = [{'role': 'system', 'text': SYSTEM_PROMPT_1}, {'role': 'user', 'text': text}]
     bot.send_message(m.chat.id, ask_ya_gpt(messages))
-
-
-# TODO: сделать самое сложное - написать функцию /look_for и наконец, чёрт возьми, протестировать бота!
-
+    bot.send_message(m.chat.id, 'Хотите продолжить поиск?', reply_markup=create_keyboard(['/continue', '/menu']))
 
 
 
