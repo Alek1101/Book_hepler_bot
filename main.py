@@ -9,7 +9,6 @@ from info import *
 from database import *
 from yandex_gpt import *
 
-
 logging.basicConfig(
     filename=LOGS,
     level=logging.INFO,
@@ -19,7 +18,6 @@ logging.basicConfig(
 
 # load_dotenv()
 bot = telebot.TeleBot(TOKEN)
-
 
 create_db()
 create_table()
@@ -34,25 +32,27 @@ def create_keyboard(data: list):
 
 @bot.message_handler(commands=['start'])
 def say_start(message: Message):
+    bot.send_message(message.chat.id, 'Предупреждение от создателей бота:\n'
+                                      '<i>К боту подключена нейросеть Yandex GPT, которая может ошибаться'
+                                      ' в своих ответах. Просим относиться к этому с пониманием.</i>'
+                                      '\nПриятного общения!', parse_mode='html')
     user_id = message.from_user.id
     # TODO: короче лимиты есть, там что по тексту что куда тыкать я хз
-    # если пользователя нет в таблице и привышен лимит пользователей присылаем извенения и выходим из функции
+    # если пользователя нет в таблице и превышен лимит пользователей присылаем извинения и выходим из функции
     if not is_user_in_db(user_id) and len(get_all_from_table()) > MAX_USERS:
         bot.send_message(user_id, TEXT_APOLOGIES)
         return
 
-    # а если юзера нет в таблице и не привышен лимит пользователей, то добавляем его в таблицу
+    # а если юзера нет в таблице и не превышен лимит пользователей, то добавляем его в таблицу
     elif not is_user_in_db(message.from_user.id) and len(get_all_from_table()) < MAX_USERS:
         add_new_user(message.from_user.id)
 
     # обновляем messages и отправляем приветствие
     update_row(user_id, 'messages', json.dumps([{'role': 'system', 'text': SYSTEM_PROMPT}]))
-    bot.send_message(message.from_user.id, GREETING, reply_markup=create_keyboard(['/help', '/book', '/look_for']))
-
-
-@bot.message_handler(commands=['help'])
-def say_help(message: Message):
-    bot.send_message(message.from_user.id, TEXT_HELP, reply_markup=create_keyboard(['/ask']))
+    bot.send_message(message.from_user.id, 'Приветствую тебя, пользователь!\n'
+                                           'Ты, скорее всего, обращаешься ко мне в первый раз\n'
+                                           'Я умею работать с книгами и могу помочь узнать о книге или найти её.'
+                                           '\nЖду тебя в меню!', reply_markup=create_keyboard(['/menu']))
 
 
 @bot.message_handler(commands=['debug'])
@@ -73,21 +73,8 @@ def menu(m):
                      reply_markup=create_keyboard(['/book', '/look_for']))
 
 
-@bot.message_handler(commands=['ask'])
-def ask(m):
-    # TODO: здесь надо добавить функцию count_tokens и привязать её к значению токена пользователя в базе данных
-    bot.send_message(m.chat.id, 'Хотите ли вы узнать о какой-то конкретной книге?\n '
-                                'Или, может быть, вам хочется найти книги, соответствующие определённым'
-                                ' критериям?')
-    bot.send_message(m.chat.id, 'Вы наверняка общаетесь со мной первый раз. Поделюсь лайфхаком:'
-                                '\n-чтобы узнать краткое содержание определённой книги, нажмите /book\n'
-                                '-чтобы подобрать книги по фильтру, нажмите /look_for',
-                     reply_markup=create_keyboard(['/book', '/look_for']))
-
-
 @bot.message_handler(commands=['book', 'continue'])
 def book(m):
-    text = m.text
     bot.send_message(m.chat.id, 'Введите название книги и имя автора')
     bot.register_next_step_handler(m, book_circle)
 
@@ -106,7 +93,7 @@ def book_circle(m):
         update_row(m.chat.id, 'messages', messages)
     else:
         bot.send_message(m.from_user.id, res)
-    bot.send_message(m.chat.id, 'Хотите продолжить поиск?', reply_markup=create_keyboard(['/continue', '/menu']))
+    bot.send_message(m.chat.id, 'Хотите продолжить поиск?', reply_markup=create_keyboard(['/book', '/menu']))
 
 
 @bot.message_handler(commands=['look_for'])
@@ -117,7 +104,7 @@ def choose_genre(message: Message):
 
 
 def choose_author(message: Message):
-    # если юзер отправил не то,что есть на кнопках,то просим его выбрать жанр,опять передаем значение в эту функцию
+    # если юзер отправил не то,что есть на кнопках,то просим его выбрать жанр, опять передаем значение в эту функцию
     if message.text not in GENRE_LIST:
         bot.send_message(message.from_user.id, 'Выбери желаемый жанр из предложенных ниже',
                          reply_markup=create_keyboard(GENRE_LIST))
@@ -153,6 +140,7 @@ def send_books(message: Message):
         update_row(user_id, 'messages', user_collection)
     else:
         bot.send_message(user_id, res)
+    bot.send_message(message.chat.id, 'Хотите продолжить поиск?', reply_markup=create_keyboard(['/look_for', '/menu']))
 
 
 bot.polling(non_stop=True)

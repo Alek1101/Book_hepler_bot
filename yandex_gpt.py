@@ -9,7 +9,7 @@ import logging
 
 
 def create_system_prompt(user_data: dict) -> list:
-    res = [{'role': 'system', 'text': SYSTEM_PROMPT + f"автора {user_data['author']}, жанра - {user_data['genre']} "}]
+    res = [{'role': 'system', 'text': SYSTEM_PROMPT + f"автора {user_data['author']} в жанре {user_data['genre']}. "}]
     return res
 
 
