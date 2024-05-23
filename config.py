@@ -1,0 +1,10 @@
+HOME_DIR = '/Users/alexkobenko/PycharmProjects/hackaton234/Book_hepler_bot'  # Здесь указываем путь к папке creds
+LOGS = f'{HOME_DIR}/logs.txt'
+DB_FILE = f'{HOME_DIR}/messages.db'
+IAM_TOKEN_PATH = f'{HOME_DIR}/creds/iam_token.txt'
+FOLDER_ID_PATH = f'{HOME_DIR}/creds/folder_id.txt'
+BOT_TOKEN_PATH = f'{HOME_DIR}/creds/bot_token.txt'
+MAX_GPT_TOKENS_1 = 200
+MAX_GPT_TOKENS_2 = 500
+MAX_USERS = 10
+MAX_USER_GPT_TOKENS = 2000
