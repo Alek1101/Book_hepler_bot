@@ -2,7 +2,7 @@ import json
 import logging
 import sqlite3
 
-from config import LOGS
+from config import DB_FILE, LOGS
 from info import DATABASE_NAME, SYSTEM_PROMPT_1, TABLE_NAME
 
 logging.basicConfig(
@@ -14,13 +14,13 @@ logging.basicConfig(
 
 
 # подключение/создание базы данных
-def create_db(database_name: str = DATABASE_NAME):
+def create_db(database_name: str = DB_FILE):
     with sqlite3.connect(database_name) as connection:
         cursor = connection.cursor()
 
 
 # для выполнения любого запроса для изменения данных
-def execute_query(sql_query: str, data: tuple = None, database_name: str = DATABASE_NAME):
+def execute_query(sql_query: str, data: tuple = None, database_name: str = DB_FILE):
     try:
         with sqlite3.connect(database_name) as connection:
             cursor = connection.cursor()
@@ -35,7 +35,7 @@ def execute_query(sql_query: str, data: tuple = None, database_name: str = DATAB
 
 
 # для выполнения любого запроса, чтобы получить данные
-def execute_selection_query(sql_query: str, data: tuple = None, database_name: str = DATABASE_NAME) -> list:
+def execute_selection_query(sql_query: str, data: tuple = None, database_name: str = DB_FILE) -> list:
     try:
         with sqlite3.connect(database_name) as connection:
             cursor = connection.cursor()
