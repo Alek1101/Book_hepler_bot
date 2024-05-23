@@ -1,13 +1,17 @@
+import json
+import logging
+
 import telebot
 from telebot.types import Message, ReplyKeyboardMarkup
 
-import os
-from dotenv import load_dotenv
-
-from config import *
-from info import *
-from database import *
-from yandex_gpt import *
+from config import (LOGS, MAX_GPT_TOKENS_1, MAX_GPT_TOKENS_2,
+                    MAX_USER_GPT_TOKENS, MAX_USERS)
+from creds import get_bot_token
+from database import (add_new_user, create_db, create_table,
+                      get_all_from_table, get_user_data, is_user_in_db,
+                      update_row)
+from info import GENRE_LIST, SYSTEM_PROMPT, SYSTEM_PROMPT_1, TEXT_APOLOGIES
+from yandex_gpt import ask_ya_gpt, count_gpt_tokens, create_system_prompt
 
 logging.basicConfig(
     filename=LOGS,
@@ -15,10 +19,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     filemode="w",
 )
-
-# load_dotenv()
-bot = telebot.TeleBot(TOKEN)
-
+bot = telebot.TeleBot(get_bot_token())
 create_db()
 create_table()
 
@@ -37,13 +38,12 @@ def say_start(message: Message):
                                       ' в своих ответах. Просим относиться к этому с пониманием.</i>'
                                       '\nПриятного общения!', parse_mode='html')
     user_id = message.from_user.id
-    # TODO: короче лимиты есть, там что по тексту что куда тыкать я хз
-    # если пользователя нет в таблице и превышен лимит пользователей присылаем извинения и выходим из функции
+    # если пользователя нет в таблице и превышен лимит пользователей, присылаем извинения и выходим из функции
     if not is_user_in_db(user_id) and len(get_all_from_table()) > MAX_USERS:
         bot.send_message(user_id, TEXT_APOLOGIES)
         return
 
-    # а если юзера нет в таблице и не превышен лимит пользователей, то добавляем его в таблицу
+    # а если пользователя нет в таблице и не превышен лимит пользователей, то добавляем его в таблицу
     elif not is_user_in_db(message.from_user.id) and len(get_all_from_table()) < MAX_USERS:
         add_new_user(message.from_user.id)
 
@@ -73,7 +73,7 @@ def menu(m):
                      reply_markup=create_keyboard(['/book', '/look_for']))
 
 
-@bot.message_handler(commands=['book', 'continue'])
+@bot.message_handler(commands=['book'])
 def book(m):
     bot.send_message(m.chat.id, 'Введите название книги и имя автора')
     bot.register_next_step_handler(m, book_circle)
@@ -86,7 +86,7 @@ def book_circle(m):
     if count_gpt_tokens(messages) >= MAX_USER_GPT_TOKENS:
         bot.send_message(m.chat.id, TEXT_APOLOGIES)
         return
-    status, res = ask_ya_gpt(messages)
+    status, res = ask_ya_gpt(messages, MAX_GPT_TOKENS_1)
     if status:
         bot.send_message(m.chat.id, res)
         messages.append({'role': 'assistant', 'text': res})
@@ -98,13 +98,14 @@ def book_circle(m):
 
 @bot.message_handler(commands=['look_for'])
 def choose_genre(message: Message):
-    # отправляем сообщение, чтобы юзер выбрал понравившейся жанр и передаем ответ в следющую функцию
+    # отправляем сообщение, чтобы пользователь выбрал понравившийся жанр и передаем ответ в следующую функцию
     bot.send_message(message.from_user.id, 'Выбери желаемый жанр.', reply_markup=create_keyboard(GENRE_LIST))
     bot.register_next_step_handler(message, choose_author)
 
 
 def choose_author(message: Message):
-    # если юзер отправил не то,что есть на кнопках,то просим его выбрать жанр, опять передаем значение в эту функцию
+    # если пользователь отправил не то, что есть на кнопках, то просим его выбрать жанр, опять передаем значение в эту
+    # функцию
     if message.text not in GENRE_LIST:
         bot.send_message(message.from_user.id, 'Выбери желаемый жанр из предложенных ниже',
                          reply_markup=create_keyboard(GENRE_LIST))
@@ -132,7 +133,7 @@ def send_books(message: Message):
         return
 
     update_row(user_id, 'tokens', int(user_data['tokens']) + count_gpt_tokens(user_collection))
-    status, res = ask_ya_gpt(user_collection)
+    status, res = ask_ya_gpt(user_collection, MAX_GPT_TOKENS_2)
 
     if status:
         bot.send_message(user_id, res)

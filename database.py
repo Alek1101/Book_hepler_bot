@@ -1,12 +1,12 @@
-import sqlite3
-import logging
 import json
+import logging
+import sqlite3
 
-from info import *
-
+from config import LOGS
+from info import DATABASE_NAME, SYSTEM_PROMPT_1, TABLE_NAME
 
 logging.basicConfig(
-    filename=NAME_FILE_LOGS,
+    filename=LOGS,
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     filemode="w",
@@ -72,7 +72,7 @@ def is_user_in_db(user_id: int, table_name: str = TABLE_NAME) -> bool:
     return bool(result)
 
 
-# добавляет в таблицу нового юзера
+# добавляет в таблицу нового пользователя
 def add_new_user(user_id: int, table_name: str = TABLE_NAME):
     if not is_user_in_db(user_id):
         sql_query = (
@@ -93,7 +93,7 @@ def update_row(user_id: int, column_name: str, new_value: int | str | list, tabl
     logging.info(f'{column_name} поменялось на {new_value} у пользователя {user_id}')
 
 
-# возвращает инфу про юзера
+# возвращает информацию про пользователя
 def get_user_data(user_id: int, table_name: str = TABLE_NAME) -> dict:
     sql_query = f'SELECT * FROM {table_name} WHERE user_id = ?;'
     row = execute_selection_query(sql_query, (user_id,))[0]
@@ -104,7 +104,7 @@ def get_user_data(user_id: int, table_name: str = TABLE_NAME) -> dict:
     return result
 
 
-# функция, которая нужна если захотим установить лимит пользователей
+# функция для лимита пользователей
 def get_all_from_table() -> list:
     sql_query = f'SELECT * FROM {TABLE_NAME};'
     res = execute_selection_query(sql_query)

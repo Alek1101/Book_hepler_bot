@@ -1,11 +1,14 @@
+import logging
+
 import requests
 
-from config import *
-from info import *
-import logging
-# from creds import get_creds
+from config import LOGS
+from creds import get_creds
+from info import GOOD_STATUS_CODE, SYSTEM_PROMPT
 
-# IAM_TOKEN, FOLDER_ID = get_creds()
+IAM_TOKEN, FOLDER_ID = get_creds()
+logging.basicConfig(filename=LOGS, level=logging.INFO, format='%(asctime)s FILE: %(filename)s IN: %(funcName)s '
+                                                              'MESSAGE: %(message)s', filemode='w')
 
 
 def create_system_prompt(user_data: dict) -> list:
@@ -30,14 +33,14 @@ def count_gpt_tokens(messages: list) -> int:
         return 0
 
 
-def ask_ya_gpt(user_collection: list):
+def ask_ya_gpt(user_collection: list, max_token: int):
     headers = {'Authorization': f'Bearer {IAM_TOKEN}',
                'Content-Type': 'application/json'}
     data = {'modelUri': f'gpt://{FOLDER_ID}/yandexgpt-lite',
             "completionOptions": {
                 "stream": False,
                 "temperature": 0.6,
-                "maxTokens": MAX_GPT_TOKENS
+                "maxTokens": max_token
             },
             'messages': user_collection
             }
